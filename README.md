@@ -25,7 +25,7 @@ docker compose exec -T backend python -m scripts.seed_demo
 ## 编辑的一天
 
 1. 09:00，主题研究编辑周宁登录研究首页，读“稳定的词组，也需要人来读”。
-2. 在“分词语料”核对 `秋季展签分词摘要 · 360篇` 的 reference、标题与空白分词文本；也可按页面 JSON 示例导入 5–1000 篇新文档。
+2. 在“分词语料”核对 `秋季展签分词摘要 · 360篇` 的 reference、标题与空白分词文本；也可按页面 JSON 示例导入 5–1000 篇新文档。修订按递增版号加分片总数交付：分片可乱序、可重传（同内容幂等，不重复展签），收齐后整包替换，缺席展签随新版移除；收齐前上一完整版本继续生效，同片内容冲突整版隔离，较旧版本晚收齐不回滚。页面可续接未齐版本并定位缺片、冲突与实际生效版本。
 3. 在“主题配置”预先决定 K=4、初始化重复 5、seed=221、min_df=2、max_iter=2000 和 tolerance=0.0001，再送入队列。K 是编辑研究选择，不自动按跨 K 的重建误差下降选优。
 4. 在“词权与稳定”选择任务，查看冻结输入指纹、357 有效文档、3 个排除理由、词汇和 IDF。5 次真实拟合使用 seed 221–225，各自保存迭代数与重建误差。
 5. 读主题词权与代表文档的相对激活，将“待命名主题01”改为自己的编辑名称，并留下命名依据。名称由人工输入，程序没有语义真值标签。
@@ -47,7 +47,7 @@ docker compose exec -T backend python -m scripts.seed_demo
 
 ## 结构
 
-75 个有职责的 Python/TypeScript/Vue/CSS 源文件（不含空包、依赖和编译产物）。六个业务页面为研究首页、分词语料、主题配置、词权与稳定、编辑审阅、成册留痕。五个业务实体 Corpus → TokenDocument → TopicRun → TopicProfile → EditorialNote，另有 User/AuditLog。路由、schema、服务、ORM、前端 API/store 和页面形成完整链路。
+75 个有职责的 Python/TypeScript/Vue/CSS 源文件（不含空包、依赖和编译产物）。六个业务页面为研究首页、分词语料、主题配置、词权与稳定、编辑审阅、成册留痕。业务实体 Corpus → CorpusVersion/CorpusShard → TokenDocument → TopicRun → TopicProfile → EditorialNote，另有 User/AuditLog。语料按版本整包生效：研究运行钉住创建时的生效版本（topic_runs.corpus_version_id），导入与研究并发也只读一个完整版本；文档列表与语料计数只反映生效版本。路由、schema、服务、ORM、前端 API/store 和页面形成完整链路。
 
 后端枚举位于 `src/constants/enums.py`，前端对应 `src/constants/enums.ts`。RequestID 与 Error 两个中间件统一请求追踪和错误边界。TopicTerms、RunSummary、RunTable、AlignmentGrid 和 common 组件复用真实接口数据。Celery 的结果持久化后由前端轮询刷新。审阅前冻结主题快照以保持批准结果的可复查性。
 
@@ -55,4 +55,4 @@ docker compose exec -T backend python -m scripts.seed_demo
 
 真实容器/API/独立数值 oracle、seed 保修改、角色 403、真实浏览器导入到导出与截图结果见 `TESTING.md`。测试产物独立存放在批次 `test-artifacts/gb-0021`，不混入源码。主 fixture 的 360 篇与浏览器另外导入的 8 篇块状语料是两次不同研究；后者可分解到近零误差，不能据此声称真实语料同样可完美重建。
 
-当前面向已分词、固定领域白名单，未验证外部真实中文语料、跨领域泛化或生产并发。最多 1000 文档、10 次串行初始化，worker 并发 1；没有自动选 K、自动主题命名、在线增量词汇或外部发布。白名单会过滤未知词，编辑需核对原文。数值秩阈值及 NMF 容差会影响可拟合边界。元数据通过 SQLAlchemy create_all 创建，未提供生产迁移链。字体使用 Google Fonts，断网时退回本地衬线/无衬线字体。
+当前面向已分词、固定领域白名单，未验证外部真实中文语料、跨领域泛化或生产并发。最多 1000 文档、10 次串行初始化，worker 并发 1；没有自动选 K、自动主题命名、在线增量词汇或外部发布。白名单会过滤未知词，编辑需核对原文。数值秩阈值及 NMF 容差会影响可拟合边界。元数据通过 SQLAlchemy create_all 创建，启动时 ensure_schema 幂等补齐版本列与唯一键、backfill_versions 把遗留文档归并为各语料首版，未提供生产迁移链。字体使用 Google Fonts，断网时退回本地衬线/无衬线字体。

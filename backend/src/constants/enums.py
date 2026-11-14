@@ -12,3 +12,8 @@ class NoteStatus(StrEnum):
  DRAFT='draft'
  APPROVED='approved'
  REJECTED='rejected'
+class VersionStatus(StrEnum):
+ RECEIVING='receiving'
+ ACTIVE='active'
+ SUPERSEDED='superseded'
+ CONFLICT='conflict'

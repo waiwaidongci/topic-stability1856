@@ -6,6 +6,7 @@ class TopicRun(Base):
  __tablename__='topic_runs'
  id:Mapped[int]=mapped_column(primary_key=True)
  corpus_id:Mapped[int]=mapped_column(ForeignKey('corpora.id'))
+ corpus_version_id:Mapped[int|None]=mapped_column(ForeignKey('corpus_versions.id'),nullable=True)
  name:Mapped[str]=mapped_column(String(100))
  config:Mapped[dict]=mapped_column(JSON)
  status:Mapped[str]=mapped_column(String(20),default='queued')

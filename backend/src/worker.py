@@ -18,7 +18,7 @@ def analyze_run(id):
   if not run or run.status=='succeeded':return
   run.status='running';db.commit()
   try:
-   result=analyze(row(db.get(Corpus,run.corpus_id)),list_documents(db,run.corpus_id),run.config)
+   result=analyze(row(db.get(Corpus,run.corpus_id)),list_documents(db,run.corpus_id,version_id=run.corpus_version_id),run.config)
    for p in result['profiles']:
     if not db.scalar(select(TopicProfile).where(TopicProfile.run_id==id,TopicProfile.topic_index==p['topic_index'])):db.add(TopicProfile(run_id=id,topic_index=p['topic_index'],label=p['label'],weights=p['weights'],mean_similarity=p['mean_similarity']))
    Path(ARTIFACT_DIR).mkdir(parents=True,exist_ok=True);Path(ARTIFACT_DIR,f'topic-{id}.json').write_text(json.dumps(result,ensure_ascii=False,allow_nan=False));run.result=result;run.status='succeeded';run.error=None;db.commit();record(db,'worker','topic.succeeded',{'run_id':id,'repeats':run.config['repeats']})
